@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  etcd_ca: /etcd-secrets/etcd-ca
+  etcd_cert: /etcd-secrets/etcd-cert
+  etcd_endpoints: https://IP1:4001,https://IP2:4001,https://IP3:4001
+  etcd_key: /etcd-secrets/etcd-key
+kind: ConfigMap
+metadata:
+  name: calico-etcd-config
+  namespace: kube-system

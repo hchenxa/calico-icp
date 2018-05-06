@@ -1,0 +1,72 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    app: calico-router-reflector
+  name: calico-router-reflector
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calico-router-reflector
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: calico-router-reflector
+      name: calico-router-reflector
+      namespace: kube-system
+    spec:
+      containers:
+      - env:
+        - name: ETCD_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: etcd_endpoints
+              name: calico-etcd-config
+        - name: ETCD_CA_CERT_FILE
+          valueFrom:
+            configMapKeyRef:
+              key: etcd_ca
+              name: calico-config
+        - name: ETCD_KEY_FILE
+          valueFrom:
+            configMapKeyRef:
+              key: etcd_key
+              name: calico-config
+        - name: ETCD_CERT_FILE
+          valueFrom:
+            configMapKeyRef:
+              key: etcd_cert
+              name: calico-config
+        - name: IP
+          value: IP
+        image: calico/routereflector:v0.5.0
+        imagePullPolicy: IfNotPresent
+        name: calico-router-reflector
+        resources: {}
+        volumeMounts:
+        - mountPath: /calico-secrets
+          name: etcd-certs
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      nodeSelector:
+        calico-rr: "true"
+      restartPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: dedicated
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      volumes:
+      - name: etcd-certs
+        secret:
+          defaultMode: 420
+          secretName: calico-etcd-secret

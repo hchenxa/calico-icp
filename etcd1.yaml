@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  name: k8s-etcd
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - etcd
+    - --name=etcd1
+    - --data-dir=/var/lib/etcd
+    - --initial-advertise-peer-urls=https://IP2:2380
+    - --listen-peer-urls=https://0.0.0.0:2380
+    - --listen-client-urls=https://0.0.0.0:4001
+    - --advertise-client-urls=https://IP2:4001
+    - --cert-file=/etc/cfc/conf/etcd/server.pem
+    - --key-file=/etc/cfc/conf/etcd/server-key.pem
+    - --client-cert-auth
+    - --peer-auto-tls
+    - --trusted-ca-file=/etc/cfc/conf/etcd/ca.pem
+    - --initial-cluster-token=etcd-cluster-1
+    - --initial-cluster=etcd0=https://IP1:2380,etcd1=https://IP2:2380,etcd2=https://IP3:2380
+    - --grpc-keepalive-timeout=0
+    - --grpc-keepalive-interval=0
+    - --snapshot-count=10000
+    - --initial-cluster-state=new
+    image: ibmcom/etcd:v3.2.14
+    imagePullPolicy: IfNotPresent
+    name: etcd
+    resources: {}
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/etcd
+      name: data
+    - mountPath: /etc/cfc/conf/etcd
+      name: etcd-certs
+  dnsPolicy: ClusterFirst
+  hostNetwork: true
+  tolerations:
+  - effect: NoExecute
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /var/lib/etcd
+      type: ""
+    name: data
+  - hostPath:
+      path: /etc/cfc/conf/etcd
+      type: ""
+    name: etcd-certs
